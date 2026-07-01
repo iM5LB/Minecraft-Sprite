@@ -1,0 +1,25 @@
+.github/workflows/deploy.yml
+  s_17f33d7e590ea7::t_4c1efd1e6f1cf1 9-15,18
+  s_17f33d7e590ea7::t_3246b16484d5c5 36-37,39-50
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.8",
+  "base_commit_sha": "486956e3a3e76b76715a75348e1591758ceea596",
+  "prompts": {},
+  "humans": {
+    "h_8d389b5604e2ae": {
+      "author": "i2rqx <14554378@uofn.edu.om>"
+    }
+  },
+  "sessions": {
+    "s_17f33d7e590ea7": {
+      "agent_id": {
+        "tool": "github-copilot",
+        "id": "b1e3693c-0775-4d3e-8d3d-c718b6bb63b2",
+        "model": "gpt-4.1"
+      },
+      "human_author": "i2rqx <14554378@uofn.edu.om>"
+    }
+  }
+}
