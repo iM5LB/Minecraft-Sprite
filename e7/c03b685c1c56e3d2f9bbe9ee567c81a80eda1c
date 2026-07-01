@@ -1,0 +1,32 @@
+assets/index-CeAqHluW.css
+  s_17f33d7e590ea7::t_e57094b1f2f290 1
+assets/index-DZ2nSswl.js
+  s_17f33d7e590ea7::t_bb2d515dee4f6b 1-9
+favicon.svg
+  s_17f33d7e590ea7::t_9316fb3d664dd8 1
+index.html
+  s_17f33d7e590ea7::t_5f0683dd4a3da7 8-9
+minecraft-sprites/manifest.json
+  s_17f33d7e590ea7::t_08e11e0bbf5971 1-23679
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.8",
+  "base_commit_sha": "e7c03b685c1c56e3d2f9bbe9ee567c81a80eda1c",
+  "prompts": {},
+  "humans": {
+    "h_8d389b5604e2ae": {
+      "author": "i2rqx <14554378@uofn.edu.om>"
+    }
+  },
+  "sessions": {
+    "s_17f33d7e590ea7": {
+      "agent_id": {
+        "tool": "github-copilot",
+        "id": "b1e3693c-0775-4d3e-8d3d-c718b6bb63b2",
+        "model": "gpt-4.1"
+      },
+      "human_author": "i2rqx <14554378@uofn.edu.om>"
+    }
+  }
+}
