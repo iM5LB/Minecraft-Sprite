@@ -1,0 +1,24 @@
+vite.config.js
+  s_17f33d7e590ea7::t_2164c8954d90a7 7
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.8",
+  "base_commit_sha": "5998dfda31fc6e9cc807637a4a0f1ef9e35485f8",
+  "prompts": {},
+  "humans": {
+    "h_8d389b5604e2ae": {
+      "author": "i2rqx <14554378@uofn.edu.om>"
+    }
+  },
+  "sessions": {
+    "s_17f33d7e590ea7": {
+      "agent_id": {
+        "tool": "github-copilot",
+        "id": "b1e3693c-0775-4d3e-8d3d-c718b6bb63b2",
+        "model": "gpt-4.1"
+      },
+      "human_author": "i2rqx <14554378@uofn.edu.om>"
+    }
+  }
+}
