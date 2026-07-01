@@ -1,0 +1,26 @@
+package-lock.json
+  s_17f33d7e590ea7::t_cd9b273bf854ee 270-272,776-809
+.github/workflows/deploy.yml
+  s_17f33d7e590ea7::t_49e86013c3bd41 29
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.8",
+  "base_commit_sha": "99eca144705a16c7bbd3239404ad0923a0d067d6",
+  "prompts": {},
+  "humans": {
+    "h_8d389b5604e2ae": {
+      "author": "i2rqx <14554378@uofn.edu.om>"
+    }
+  },
+  "sessions": {
+    "s_17f33d7e590ea7": {
+      "agent_id": {
+        "tool": "github-copilot",
+        "id": "b1e3693c-0775-4d3e-8d3d-c718b6bb63b2",
+        "model": "gpt-4.1"
+      },
+      "human_author": "i2rqx <14554378@uofn.edu.om>"
+    }
+  }
+}
