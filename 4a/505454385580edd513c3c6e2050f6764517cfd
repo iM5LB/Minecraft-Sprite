@@ -1,0 +1,19 @@
+index.html
+  s_17f33d7e590ea7::t_9cd0f7838c2c85 11
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.8",
+  "base_commit_sha": "4a505454385580edd513c3c6e2050f6764517cfd",
+  "prompts": {},
+  "sessions": {
+    "s_17f33d7e590ea7": {
+      "agent_id": {
+        "tool": "github-copilot",
+        "id": "b1e3693c-0775-4d3e-8d3d-c718b6bb63b2",
+        "model": "gpt-4.1"
+      },
+      "human_author": "i2rqx <14554378@uofn.edu.om>"
+    }
+  }
+}
