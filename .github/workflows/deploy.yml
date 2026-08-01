@@ -1,0 +1,75 @@
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Ensure Pages uses GitHub Actions
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          REPO="${{ github.repository }}"
+          BRANCH="${{ github.event.repository.default_branch }}"
+
+          if ! gh api "repos/${REPO}/pages" --silent >/dev/null 2>&1; then
+            echo "Creating Pages site with workflow build type…"
+            jq -n --arg branch "$BRANCH" '{build_type:"workflow",source:{branch:$branch,path:"/"}}' \
+              | gh api -X POST "repos/${REPO}/pages" --input -
+          else
+            BT="$(gh api "repos/${REPO}/pages" --jq .build_type)"
+            if [ "$BT" != "workflow" ]; then
+              echo "Switching Pages build type from '${BT}' to workflow…"
+              gh api -X PUT "repos/${REPO}/pages" -f build_type=workflow
+            else
+              echo "Pages already uses GitHub Actions."
+            fi
+          fi
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Build
+        run: npm run build
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: ./dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
