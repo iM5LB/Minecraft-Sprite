@@ -6,6 +6,7 @@ import {
   ExternalLink,
   FileJson,
   Image,
+  Menu,
   Moon,
   Play,
   RefreshCw,
@@ -29,7 +30,18 @@ function App() {
   const [selected, setSelected] = useState(null)
   const [copiedKey, setCopiedKey] = useState('')
   const [commandType, setCommandType] = useState(COMMAND_TYPES[0].key)
+  const [filtersOpen, setFiltersOpen] = useState(false)
+  const [isMobile, setIsMobile] = useState(false)
   const searchRef = useRef(null)
+  const detailRef = useRef(null)
+
+  useEffect(() => {
+    const media = window.matchMedia('(max-width: 820px)')
+    const sync = () => setIsMobile(media.matches)
+    sync()
+    media.addEventListener('change', sync)
+    return () => media.removeEventListener('change', sync)
+  }, [])
 
   useEffect(() => {
     let ignore = false
@@ -76,15 +88,26 @@ function App() {
         searchRef.current?.focus()
       }
 
-      if (event.key === 'Escape' && document.activeElement === searchRef.current) {
-        if (query) setQuery('')
-        else searchRef.current?.blur()
+      if (event.key === 'Escape') {
+        if (filtersOpen) {
+          setFiltersOpen(false)
+          return
+        }
+        if (document.activeElement === searchRef.current) {
+          if (query) setQuery('')
+          else searchRef.current?.blur()
+        }
       }
     }
 
     window.addEventListener('keydown', onKeyDown)
     return () => window.removeEventListener('keydown', onKeyDown)
-  }, [query])
+  }, [filtersOpen, query])
+
+  useEffect(() => {
+    document.body.classList.toggle('filters-open', filtersOpen)
+    return () => document.body.classList.remove('filters-open')
+  }, [filtersOpen])
 
   const filtered = useMemo(
     () => filterSprites(manifest?.sprites || [], activeAtlas, query, { animatedOnly }),
@@ -102,6 +125,7 @@ function App() {
     setActiveAtlas(atlasId)
     setPage(1)
     setSelected(null)
+    setFiltersOpen(false)
   }
 
   function handleQueryChange(value) {
@@ -112,6 +136,15 @@ function App() {
   function handleAnimatedOnlyChange(value) {
     setAnimatedOnly(value)
     setPage(1)
+  }
+
+  function handleSelectSprite(sprite) {
+    setSelected(sprite)
+    window.requestAnimationFrame(() => {
+      if (isMobile) {
+        detailRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
+      }
+    })
   }
 
   async function copyText(key, text) {
@@ -130,17 +163,27 @@ function App() {
   }
 
   return (
-    <main className="app-shell">
+    <main className={filtersOpen ? 'app-shell filters-open' : 'app-shell'}>
+      <button
+        className="sidebar-backdrop"
+        onClick={() => setFiltersOpen(false)}
+        type="button"
+        aria-label="Close filters"
+        tabIndex={filtersOpen ? 0 : -1}
+      />
+
       <Sidebar
         activeAtlas={activeAtlas}
         animatedCount={manifest.animatedCount || 0}
         animatedOnly={animatedOnly}
         atlases={manifest.atlases}
+        filtersOpen={filtersOpen}
         onAnimatedOnlyChange={handleAnimatedOnlyChange}
         onAtlasChange={handleAtlasChange}
+        onCloseFilters={() => setFiltersOpen(false)}
         onQueryChange={handleQueryChange}
         query={query}
-        searchRef={searchRef}
+        searchRef={isMobile ? null : searchRef}
         totalSprites={manifest.sprites.length}
       />
 
@@ -148,10 +191,26 @@ function App() {
         <Header
           activeAtlasLabel={activeAtlasMeta?.name || 'All atlases'}
           filteredCount={filtered.length}
+          filtersOpen={filtersOpen}
           isDark={isDark}
           manifestVersion={manifest.version}
+          onOpenFilters={() => setFiltersOpen(true)}
           onToggleTheme={toggleTheme}
           selected={selected}
+        />
+
+        <MobileToolbar
+          activeAtlas={activeAtlas}
+          animatedCount={manifest.animatedCount || 0}
+          animatedOnly={animatedOnly}
+          atlases={manifest.atlases}
+          onAnimatedOnlyChange={handleAnimatedOnlyChange}
+          onAtlasChange={handleAtlasChange}
+          onOpenFilters={() => setFiltersOpen(true)}
+          onQueryChange={handleQueryChange}
+          query={query}
+          searchRef={isMobile ? searchRef : null}
+          totalSprites={manifest.sprites.length}
         />
 
         <section className="workbench">
@@ -165,19 +224,21 @@ function App() {
               setPage(1)
             }}
             onPageChange={setPage}
-            onSelectSprite={setSelected}
+            onSelectSprite={handleSelectSprite}
             page={safePage}
             selectedId={selected?.id}
             sprites={visibleSprites}
           />
-          <SpritePreview selected={selected} />
-          <CopyPanel
-            commandType={commandType}
-            copiedKey={copiedKey}
-            onCommandTypeChange={setCommandType}
-            onCopy={copyText}
-            snippets={snippets}
-          />
+          <div className="detail-stack" ref={detailRef}>
+            <SpritePreview selected={selected} />
+            <CopyPanel
+              commandType={commandType}
+              copiedKey={copiedKey}
+              onCommandTypeChange={setCommandType}
+              onCopy={copyText}
+              snippets={snippets}
+            />
+          </div>
         </section>
 
         <SiteFooter />
@@ -191,56 +252,40 @@ function Sidebar({
   animatedCount,
   animatedOnly,
   atlases,
+  filtersOpen,
   onAnimatedOnlyChange,
   onAtlasChange,
+  onCloseFilters,
   onQueryChange,
   query,
   searchRef,
   totalSprites,
 }) {
   return (
-    <aside className="sidebar">
+    <aside className={filtersOpen ? 'sidebar open' : 'sidebar'} id="filters-drawer">
       <div className="brand">
         <Image size={24} />
         <div>
           <h1>{SITE_TITLE}</h1>
           <span>{totalSprites.toLocaleString()} sprites</span>
         </div>
+        <button
+          className="drawer-close"
+          onClick={onCloseFilters}
+          type="button"
+          aria-label="Close filters"
+        >
+          <X size={18} />
+        </button>
       </div>
 
-      <div className="search-panel">
-        <label className="search-box">
-          <Search size={18} />
-          <input
-            ref={searchRef}
-            value={query}
-            onChange={(event) => onQueryChange(event.target.value)}
-            placeholder="Search name, path, atlas…"
-            aria-label="Search sprites"
-          />
-          {query ? (
-            <button
-              className="search-clear"
-              onClick={() => onQueryChange('')}
-              type="button"
-              aria-label="Clear search"
-            >
-              <X size={15} />
-            </button>
-          ) : (
-            <kbd className="search-hint">/</kbd>
-          )}
-        </label>
-
-        <button
-          className={animatedOnly ? 'filter-chip active' : 'filter-chip'}
-          onClick={() => onAnimatedOnlyChange(!animatedOnly)}
-          type="button"
-        >
-          <Play size={14} />
-          Animated only
-          <b>{animatedCount}</b>
-        </button>
+      <div className="search-panel desktop-search">
+        <SearchField onQueryChange={onQueryChange} query={query} searchRef={searchRef} />
+        <AnimatedFilter
+          active={animatedOnly}
+          count={animatedCount}
+          onToggle={() => onAnimatedOnlyChange(!animatedOnly)}
+        />
       </div>
 
       <nav className="atlas-list" aria-label="Minecraft atlases">
@@ -265,6 +310,96 @@ function Sidebar({
   )
 }
 
+function MobileToolbar({
+  activeAtlas,
+  animatedCount,
+  animatedOnly,
+  atlases,
+  onAnimatedOnlyChange,
+  onAtlasChange,
+  onOpenFilters,
+  onQueryChange,
+  query,
+  searchRef,
+  totalSprites,
+}) {
+  return (
+    <div className="mobile-toolbar">
+      <SearchField onQueryChange={onQueryChange} query={query} searchRef={searchRef} />
+      <div className="mobile-filter-row">
+        <AnimatedFilter
+          active={animatedOnly}
+          count={animatedCount}
+          onToggle={() => onAnimatedOnlyChange(!animatedOnly)}
+        />
+        <button className="toolbar-button filters-trigger" onClick={onOpenFilters} type="button">
+          <Menu size={16} />
+          Atlases
+        </button>
+      </div>
+      <nav className="atlas-chips" aria-label="Minecraft atlases">
+        <AtlasChip active={activeAtlas === 'all'} label="All" onClick={() => onAtlasChange('all')} />
+        {atlases.map((atlas) => (
+          <AtlasChip
+            key={atlas.id}
+            active={activeAtlas === atlas.id}
+            animated={atlas.animatedCount > 0}
+            label={atlas.name}
+            onClick={() => onAtlasChange(atlas.id)}
+          />
+        ))}
+        <span className="atlas-chip-spacer" aria-hidden="true" />
+      </nav>
+      <p className="mobile-count">{totalSprites.toLocaleString()} sprites available</p>
+    </div>
+  )
+}
+
+function SearchField({ onQueryChange, query, searchRef }) {
+  return (
+    <label className="search-box">
+      <Search size={18} />
+      <input
+        ref={searchRef || undefined}
+        value={query}
+        onChange={(event) => onQueryChange(event.target.value)}
+        placeholder="Search name, path, atlas…"
+        aria-label="Search sprites"
+        enterKeyHint="search"
+        autoCapitalize="off"
+        autoCorrect="off"
+        spellCheck={false}
+      />
+      {query ? (
+        <button
+          className="search-clear"
+          onClick={() => onQueryChange('')}
+          type="button"
+          aria-label="Clear search"
+        >
+          <X size={15} />
+        </button>
+      ) : (
+        <kbd className="search-hint">/</kbd>
+      )}
+    </label>
+  )
+}
+
+function AnimatedFilter({ active, count, onToggle }) {
+  return (
+    <button
+      className={active ? 'filter-chip active' : 'filter-chip'}
+      onClick={onToggle}
+      type="button"
+    >
+      <Play size={14} />
+      Animated
+      <b>{count}</b>
+    </button>
+  )
+}
+
 function AtlasButton({ active, animatedCount = 0, count, label, onClick }) {
   return (
     <button className={active ? 'active' : ''} onClick={onClick} type="button">
@@ -277,10 +412,28 @@ function AtlasButton({ active, animatedCount = 0, count, label, onClick }) {
   )
 }
 
-function Header({ activeAtlasLabel, filteredCount, isDark, manifestVersion, onToggleTheme, selected }) {
+function AtlasChip({ active, animated = false, label, onClick }) {
+  return (
+    <button className={active ? 'atlas-chip active' : 'atlas-chip'} onClick={onClick} type="button">
+      {label}
+      {animated ? <i className="anim-dot" /> : null}
+    </button>
+  )
+}
+
+function Header({
+  activeAtlasLabel,
+  filteredCount,
+  filtersOpen,
+  isDark,
+  manifestVersion,
+  onOpenFilters,
+  onToggleTheme,
+  selected,
+}) {
   return (
     <header className="topbar">
-      <div>
+      <div className="topbar-copy">
         <p>
           Minecraft {manifestVersion}
           <span className="topbar-sep">·</span>
@@ -291,9 +444,19 @@ function Header({ activeAtlasLabel, filteredCount, isDark, manifestVersion, onTo
         <h2>{selected ? selected.name : 'Minecraft sprites'}</h2>
       </div>
       <div className="top-actions">
+        <button
+          className="toolbar-button mobile-only-flex"
+          onClick={onOpenFilters}
+          type="button"
+          aria-expanded={filtersOpen}
+          aria-controls="filters-drawer"
+        >
+          <Menu size={17} />
+          Filters
+        </button>
         <a className="toolbar-button" href={`${import.meta.env.BASE_URL}minecraft-sprites/manifest.json`} download>
           <Download size={17} />
-          Manifest
+          <span className="button-label">Manifest</span>
         </a>
         <button className="toolbar-button icon-only" onClick={onToggleTheme} type="button" aria-label="Toggle theme">
           {isDark ? <Sun size={18} /> : <Moon size={18} />}
@@ -322,7 +485,7 @@ function SpriteBrowser({
           <span>Minecraft sprites</span>
         </div>
         <span>
-          {filteredCount.toLocaleString()} sprites / Page {page} of {maxPage}
+          {filteredCount.toLocaleString()} / p. {page}/{maxPage}
         </span>
       </div>
 
@@ -375,14 +538,16 @@ function SpritePreview({ selected }) {
       {selected ? (
         <div className="game-preview">
           <AnimatedSprite className="preview-sprite" sprite={selected} size={160} />
-          <strong>{selected.name}</strong>
-          <span>{selected.atlas} / {selected.sprite}</span>
-          {selected.animated ? (
-            <em className="anim-meta">
-              Animated · {selected.animation.frames.length} frames · {selected.animation.frametime} tick
-              {selected.animation.frametime === 1 ? '' : 's'}/frame
-            </em>
-          ) : null}
+          <div className="preview-copy">
+            <strong>{selected.name}</strong>
+            <span>{selected.atlas} / {selected.sprite}</span>
+            {selected.animated ? (
+              <em className="anim-meta">
+                Animated · {selected.animation.frames.length} frames · {selected.animation.frametime} tick
+                {selected.animation.frametime === 1 ? '' : 's'}/frame
+              </em>
+            ) : null}
+          </div>
         </div>
       ) : (
         <div className="empty-state">
